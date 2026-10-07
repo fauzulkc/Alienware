@@ -1,0 +1,23 @@
+# Never commit firmware images, dumps or personal telemetry
+*.bin
+*.rom
+*.cap
+*.fd
+*.rcv
+*.exe
+dumps/
+extracted/
+*_extracted/
+logs/
+*.csv
+!tests/fixtures/*.csv
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+build/
+dist/
