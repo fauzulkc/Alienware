@@ -27,7 +27,7 @@ picture of this machine. Produce that report.
 
 ## Output
 Create `hardware-report/` (in a clone of `https://github.com/fauzulkc/Alienware`,
-branch `hardware-report` created from the default branch) containing:
+branch `hardware-report` created from `origin/claude/nice-sagan-1yig6z`) containing:
 - `report.md` — summary tables first, then sections below, each with the exact
   command used and its (redacted) output or a pointer to the raw file.
 - `raw/` — full raw outputs (`.txt`), and the HWiNFO CSV logs.
