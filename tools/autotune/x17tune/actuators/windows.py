@@ -59,7 +59,7 @@ class WindowsActuator(Actuator):
         self.afterburner = afterburner
         self.freq_cap = 0  # 0 = no cap (Windows semantics)
         self._last_freq_change = -1e9
-        self._original: dict[str, tuple[int | None, int | None]] = {}
+        self.original: dict[str, tuple[int | None, int | None]] = {}
         self._policy: tuple | None = None
 
     # -- AWCC -------------------------------------------------------------
@@ -94,7 +94,7 @@ class WindowsActuator(Actuator):
             except Exception as e:  # noqa: BLE001 - best effort
                 log.warning("could not read %s: %s", alias, e)
                 continue
-            self._original[alias] = parse_powercfg_indices(out)
+            self.original[alias] = parse_powercfg_indices(out)
 
     def _freq_inner_loop(self, d: Decision, s: Sample) -> bool:
         """Adjust the P-core frequency cap so package power tracks PL1. Returns True if changed."""
@@ -151,7 +151,7 @@ class WindowsActuator(Actuator):
             lambda: self.set_gpu_clock(None),
         ]
         for alias, default in (("PERFEPP", 33), ("PERFBOOSTMODE", 2), ("PROCFREQMAX", 0), ("PROCFREQMAX1", 0)):
-            ac, dc = self._original.get(alias, (default, default))
+            ac, dc = self.original.get(alias, (default, default))
             steps.append(lambda a=alias, v=ac, d=default: self._powercfg_set(a, d if v is None else v, True))
             steps.append(lambda a=alias, v=dc, d=default: self._powercfg_set(a, d if v is None else v, False))
         steps.append(self._powercfg_commit)

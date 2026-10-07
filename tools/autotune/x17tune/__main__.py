@@ -6,6 +6,7 @@
     x17tune simulate --ambient 36 --workload gaming --minutes 20
     x17tune summarize logs/x17tune.csv    averages, maxima, throttle events per hour
     x17tune fouling [--reset]             heatsink-health report / start a new baseline
+    x17tune restore                       put stock behavior back now (admin/root)
 """
 
 from __future__ import annotations
@@ -32,6 +33,7 @@ def _common(p: argparse.ArgumentParser) -> None:
     p.add_argument("--ambient-file", type=Path, help="file holding the room temperature (e.g. from a smart thermometer)")
     p.add_argument("--workload", choices=[w.value for w in Workload], help="force a workload class")
     p.add_argument("--log", type=Path, help="telemetry CSV path")
+    p.add_argument("--logfile", type=Path, help="also write the event log here (rotating, 4 x 2 MB)")
     p.add_argument("-v", "--verbose", action="store_true")
 
 
@@ -53,6 +55,8 @@ def cmd_run(a) -> int:
     act = actuators.for_platform(apply=a.apply)
     if a.apply and hasattr(act, "snapshot_power_plan"):
         act.snapshot_power_plan()
+        state.mkdir(parents=True, exist_ok=True)
+        (state / "powerplan.json").write_text(json.dumps(act.original))
     if not a.apply:
         logging.getLogger("x17tune").warning("DRY RUN - nothing is changed. Add --apply to tune for real.")
     d = Daemon(
@@ -142,6 +146,16 @@ def cmd_fouling(a) -> int:
     return 0
 
 
+def cmd_restore(a) -> int:
+    act = actuators.for_platform(apply=True)
+    snap = default_state_dir() / "powerplan.json"
+    if hasattr(act, "original") and snap.exists():
+        act.original = {k: tuple(v) for k, v in json.loads(snap.read_text()).items()}
+    act.restore()
+    print("stock behavior restored")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="x17tune", description="Alienware x17 R2 ambient-aware auto-tuner")
     ap.add_argument("--version", action="version", version=__version__)
@@ -174,11 +188,20 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("-v", "--verbose", action="store_true")
     p.set_defaults(fn=cmd_fouling)
 
+    p = sub.add_parser("restore", help="restore stock behavior immediately")
+    p.add_argument("-v", "--verbose", action="store_true")
+    p.set_defaults(fn=cmd_restore)
+
     a = ap.parse_args(argv)
-    logging.basicConfig(
-        level=logging.DEBUG if a.verbose else logging.INFO,
-        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
-    )
+    fmt = "%(asctime)s %(levelname)s %(name)s: %(message)s"
+    logging.basicConfig(level=logging.DEBUG if a.verbose else logging.INFO, format=fmt)
+    if getattr(a, "logfile", None):
+        from logging.handlers import RotatingFileHandler
+
+        a.logfile.parent.mkdir(parents=True, exist_ok=True)
+        h = RotatingFileHandler(a.logfile, maxBytes=2_000_000, backupCount=3, encoding="utf-8")
+        h.setFormatter(logging.Formatter(fmt))
+        logging.getLogger().addHandler(h)
     return a.fn(a)
 
 

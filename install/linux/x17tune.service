@@ -1,0 +1,15 @@
+[Unit]
+Description=x17tune ambient-aware power/thermal tuner (Alienware x17 R2)
+After=multi-user.target nvidia-persistenced.service
+
+[Service]
+Type=simple
+# Dry-run by default. install.sh --apply switches this line to "run --apply".
+ExecStart=/opt/x17tune/venv/bin/python -m x17tune run --logfile /var/log/x17tune/x17tune.log
+ExecStopPost=/opt/x17tune/venv/bin/python -m x17tune restore
+Restart=on-failure
+RestartSec=10
+Nice=-5
+
+[Install]
+WantedBy=multi-user.target

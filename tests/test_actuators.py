@@ -85,7 +85,7 @@ def test_windows_fan_boost_and_release():
 def test_windows_restore_uses_snapshot():
     r = DryRunner()
     act = WindowsActuator(r)
-    act._original = {"PERFEPP": (40, 60)}
+    act.original = {"PERFEPP": (40, 60)}
     act.restore()
     assert "RUN powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PERFEPP 40" in r.actions
     assert "RUN powercfg /setdcvalueindex SCHEME_CURRENT SUB_PROCESSOR PERFEPP 60" in r.actions
