@@ -1,0 +1,75 @@
+# Which BIOS (Setup variable) options gen_setup_var.py is willing to script.
+#
+# Matching is case-insensitive regex against the option's Prompt text.
+# Order of checks: deny -> advanced -> safe. Anything matching none is refused
+# unless you pass --i-know-what-im-doing.
+#
+# Why this list is short: on Dell laptops an RTC/CMOS reset is NOT guaranteed
+# to wipe NVRAM Setup variables. A value that stops the machine from POSTing
+# may only be recoverable with an SPI programmer. So "safe" here means
+# "cannot plausibly prevent POST", not "has no effect".
+
+deny:  # never scripted, whatever flags are passed
+  - boot ?guard
+  - bios ?guard
+  - flash
+  - bios lock
+  - smm
+  - spi
+  - secure ?boot
+  - \btpm\b
+  - \bptt\b
+  - \bme\b
+  - management engine
+  - firmware update
+  - capsule
+  - memory (frequency|timing|voltage|profile|training)
+  - \bxmp\b
+  - dram
+  - \bvdd
+  - \bvccsa
+  - ring ratio
+  - bclk
+  - (core|cache|ring|gt|system agent|sa) voltage
+  - voltage (offset|override|mode)
+  - iccmax
+  - load ?line
+  - vt-?d
+  - \bsgx\b
+  - \btxt\b
+  - password
+
+advanced:  # scripted only with --allow-advanced (may not work; security trade-off)
+  - overclocking lock
+  - \boc lock\b
+  - cfg lock
+  - undervolt protection
+  - overclocking feature
+  - overclocking enable
+
+safe:
+  - power limit
+  - power limit \d time window
+  - turbo time
+  - tau
+  - package power
+  - turbo boost
+  - turbo mode
+  - speed ?shift
+  - hwp
+  - energy performance
+  - epp
+  - c-?states?
+  - c state limit
+  - package c
+  - aspm
+  - l1 substates
+  - re-?size bar
+  - resizable bar
+  - above 4g
+  - tcc activation offset
+  - thermal
+  - fan
+  - dynamic tuning
+  - \bdptf\b
+  - \bdtt\b

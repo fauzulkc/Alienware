@@ -1,0 +1,47 @@
+Program version: 1.6.x, Extraction mode: UEFI
+# SYNTHETIC FIXTURE for tests - modelled on IFRExtractor-RS output, NOT a dump of a real Dell BIOS.
+FormSet Guid: 7B59104A-C00D-4158-87FF-F04D6396A915, Title: "Setup", Help: "Setup"
+	DefaultStore DefaultId: 0x0, Name: "Standard Default"
+	VarStore Guid: EC87D643-EBA4-4BB5-A1E5-3F3E36B20DA9, VarStoreId: 0x1, Size: 0x1400, Name: "Setup"
+	VarStore Guid: B08F97FF-E6E8-4193-A997-5E9E9B0ADB32, VarStoreId: 0x2, Size: 0x200, Name: "CpuSetup"
+	Form FormId: 0x2710, Title: "Performance"
+		OneOf Prompt: "Intel(R) Turbo Boost Technology", Help: "Enable turbo", QuestionFlags: 0x10, QuestionId: 0x1001, VarStoreId: 0x2, VarOffset: 0x10, Flags: 0x10, Size: 8, Min: 0x0, Max: 0x1, Step: 0x0
+			OneOfOption Option: "Disabled" Value: 0
+			OneOfOption Option: "Enabled" Value: 1, Default, MfgDefault
+		End
+		SuppressIf
+			True
+			Numeric Prompt: "Power Limit 1", Help: "PL1 in 1/8 W, 0 = auto", QuestionFlags: 0x10, QuestionId: 0x1002, VarStoreId: 0x2, VarOffset: 0x20, Flags: 0x11, Size: 16, Min: 0x0, Max: 0x3E8, Step: 0x1
+				Default DefaultId: 0x0 Value: 0
+			End
+			OneOf Prompt: "Package C State Limit", Help: "", QuestionFlags: 0x10, QuestionId: 0x1003, VarStoreId: 0x2, VarOffset: 0x30, Flags: 0x10, Size: 8, Min: 0x0, Max: 0xFF, Step: 0x0
+				OneOfOption Option: "C0/C1" Value: 0
+				OneOfOption Option: "C10" Value: 8
+				OneOfOption Option: "Auto" Value: 255, Default, MfgDefault
+			End
+			CheckBox Prompt: "Overclocking Lock", Help: "", QuestionFlags: 0x0, QuestionId: 0x1004, VarStoreId: 0x2, VarOffset: 0x40, Flags: 0x0, Default: Enabled, MfgDefault: Enabled
+			OneOf Prompt: "Undervolt Protection", Help: "", QuestionFlags: 0x10, QuestionId: 0x1005, VarStoreId: 0x2, VarOffset: 0x41, Flags: 0x10, Size: 8, Min: 0x0, Max: 0x1, Step: 0x0
+				OneOfOption Option: "Disabled" Value: 0
+				OneOfOption Option: "Enabled" Value: 1, Default, MfgDefault
+			End
+			Numeric Prompt: "Core Voltage Offset", Help: "mV", QuestionFlags: 0x10, QuestionId: 0x1006, VarStoreId: 0x2, VarOffset: 0x50, Flags: 0x11, Size: 16, Min: 0x0, Max: 0x3E8, Step: 0x1
+				Default DefaultId: 0x0 Value: 0
+			End
+		End
+		GrayOutIf
+			EqIdVal QuestionId: 0x1001, Value: 0
+			OneOf Prompt: "Re-Size BAR Support", Help: "", QuestionFlags: 0x10, QuestionId: 0x2001, VarStoreId: 0x1, VarOffset: 0x123, Flags: 0x10, Size: 8, Min: 0x0, Max: 0x1, Step: 0x0
+				OneOfOption Option: "Disabled" Value: 0, Default, MfgDefault
+				OneOfOption Option: "Enabled" Value: 1
+			End
+		End
+		OneOf Prompt: "BIOS Guard", Help: "", QuestionFlags: 0x10, QuestionId: 0x3001, VarStoreId: 0x1, VarOffset: 0x200, Flags: 0x10, Size: 8, Min: 0x0, Max: 0x1, Step: 0x0
+			OneOfOption Option: "Disabled" Value: 0
+			OneOfOption Option: "Enabled" Value: 1, Default, MfgDefault
+		End
+		OneOf Prompt: "Memory Frequency", Help: "", QuestionFlags: 0x10, QuestionId: 0x3002, VarStoreId: 0x1, VarOffset: 0x210, Flags: 0x10, Size: 8, Min: 0x0, Max: 0xFF, Step: 0x0
+			OneOfOption Option: "Auto" Value: 0, Default, MfgDefault
+			OneOfOption Option: "4800" Value: 30
+		End
+	End
+End
