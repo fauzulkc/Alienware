@@ -1,0 +1,117 @@
+# Workload rules for x17tune.
+#
+# Process names are matched lower-case and without ".exe".
+# Order of evaluation (first hit wins):
+#   1. on battery                         -> battery
+#   2. foreground process in a list below -> that workload
+#   3. foreground exe path contains one of `game_path_markers` -> gaming
+#   4. any running process in `ai_inference` / `ai_training` while the GPU is busy
+#   5. any running process in `ai_if_gpu_busy` while the GPU is busy -> ai_inference
+#   6. telemetry heuristics (see classifier.py)
+#
+# Add your own games / tools here; the daemon reloads this file on restart.
+
+ai_inference:
+  - ollama
+  - ollama_llama_server
+  - ollama app
+  - llama-server
+  - llama-cli
+  - llama-bench
+  - lm studio
+  - lmstudio
+  - lms
+  - koboldcpp
+  - jan
+  - comfyui
+  - invokeai
+  - vllm
+  - whisper
+  - whisper-cli
+  - faster-whisper
+  - tabby
+
+ai_training:
+  - accelerate
+  - torchrun
+  - deepspeed
+  - kohya_ss
+  - axolotl
+  - unsloth
+
+# Ambiguous runtimes: only treated as AI when the GPU is actually busy.
+ai_if_gpu_busy:
+  - python
+  - python3
+  - pythonw
+  - py
+  - jupyter
+  - jupyter-lab
+  - jupyter-notebook
+
+gaming:
+  - cs2
+  - valorant
+  - valorant-win64-shipping
+  - fortniteclient-win64-shipping
+  - r5apex
+  - r5apex_dx12
+  - cyberpunk2077
+  - eldenring
+  - gta5
+  - gta5_enhanced
+  - rdr2
+  - bg3
+  - bg3_dx11
+  - starfield
+  - overwatch
+  - dota2
+  - leagueoflegends
+  - league of legends
+  - minecraft
+  - javaw  # Minecraft Java edition
+  - forzahorizon5
+  - pubg
+  - tslgame
+
+creator:
+  - blender
+  - davinciresolve
+  - resolve
+  - premiere pro
+  - adobe premiere pro
+  - afterfx
+  - handbrake
+  - handbrakecli
+  - ffmpeg
+  - obs64
+  - obs
+  - cl  # MSVC compiler
+  - cargo
+  - rustc
+  - msbuild
+  - ninja
+  - make
+  - gcc
+  - cc1plus
+
+quiet:
+  - vlc
+  - mpv
+  - spotify
+  - zoom
+  - teams
+  - ms-teams
+
+# A foreground exe whose path contains any of these is treated as a game.
+game_path_markers:
+  - steamapps/common
+  - steamapps\common
+  - epic games
+  - xboxgames
+  - gog galaxy/games
+  - gog games
+  - riot games
+  - ea games
+  - ubisoft game launcher/games
+  - battle.net

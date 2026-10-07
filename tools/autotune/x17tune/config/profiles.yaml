@@ -1,0 +1,161 @@
+# x17tune profiles for the Alienware x17 R2 (i7-12700H, RTX 3070 Ti Laptop).
+#
+# These are STARTING POINTS. Measure with bench/ and adjust for your unit,
+# room and noise tolerance. Every value is clamped by `limits` first.
+#
+# Units: watts, MHz, °C. cpu_epp uses the Windows PERFEPP scale
+# (0 = maximum performance ... 100 = maximum power saving); the Linux
+# actuator converts it to the 0-255 intel_pstate scale.
+
+limits:  # absolute hard clamps - nothing below may exceed these
+  cpu_pl1_w: [10, 90]
+  cpu_pl2_w: [15, 115]
+  gpu_clock_mhz: [600, 2100]
+  fan_boost: [0, 255]
+
+targets:
+  cpu_temp_c: 90  # Tjmax on the 12700H is 100 °C; 90 leaves room for spikes
+  gpu_temp_c: 80  # Ampere laptop GPUs slow down from ~87 °C; 80 keeps boost bins
+
+controller:
+  tick_s: 1.0
+  smoothing_s: 5.0  # EMA time constant applied to temperatures before control
+  hold_s: 10.0  # a new workload class must persist this long before switching
+  cpu_kp: 0.8  # W per °C over target
+  cpu_ki: 0.04  # W per °C·s
+  gpu_kp: 10.0  # MHz per °C over target
+  gpu_ki: 0.4  # MHz per °C·s
+  gpu_clock_step_mhz: 15  # Ampere clock bins are 15 MHz
+  gpu_min_change_mhz: 45  # don't re-lock clocks for smaller changes (avoids churn)
+  cpu_min_change_w: 2.0
+
+# Hot-climate scaling. Bands are picked from the estimated room temperature
+# (see ambient.py). `power_scale` multiplies every profile's sustained CPU
+# power and GPU clock ceiling; `temp_offset_c` is added to the targets
+# (negative = run cooler, which keeps the shared heatsink out of saturation
+# and leaves headroom for the EC). `prefer_efficiency` switches GPU to the
+# profile's `gpu_profile_efficient` undervolt slot.
+climate:
+  default_ambient_c: 32  # prior for South/Southeast Asian rooms until the estimator converges
+  hysteresis_c: 1.0
+  max_ambient_std_c: 2.0  # use the estimate only once it is this certain; else default_ambient_c
+  bands:
+    - name: mild
+      max_c: 28
+      power_scale: 1.00
+      temp_offset_c: 0
+      prefer_efficiency: false
+    - name: warm
+      max_c: 33
+      power_scale: 0.92
+      temp_offset_c: -1
+      prefer_efficiency: false
+    - name: hot
+      max_c: 38
+      power_scale: 0.82
+      temp_offset_c: -3
+      prefer_efficiency: true
+    - name: extreme
+      max_c: 99
+      power_scale: 0.72
+      temp_offset_c: -5
+      prefer_efficiency: true
+
+profiles:
+  gaming:
+    thermal_mode: performance
+    cpu_pl1_w: 45  # games rarely need more; spare heatsink capacity goes to the GPU
+    cpu_pl1_floor_w: 25
+    cpu_pl2_w: 90
+    cpu_epp: 25
+    cpu_boost: true
+    gpu_clock_max_mhz: null  # unlocked; the controller only caps when hot
+    gpu_clock_floor_mhz: 1200
+    gpu_profile: 2  # Afterburner slot: "undervolt @ ~1800 MHz"
+    gpu_profile_efficient: 1  # Afterburner slot: "undervolt @ ~1600 MHz"
+    cpu_yields_to_gpu: 1.0  # CPU sheds power when the GPU is over target
+    fan_boost: null
+
+  ai_inference:
+    thermal_mode: performance
+    cpu_pl1_w: 35  # token generation is GPU/VRAM-bound; CPU mostly feeds it
+    cpu_pl1_floor_w: 15
+    cpu_pl2_w: 65
+    cpu_epp: 40
+    cpu_boost: true
+    gpu_clock_max_mhz: 1605  # perf/W sweet spot: memory-bound decode barely loses speed
+    gpu_clock_floor_mhz: 1100
+    gpu_profile: 1
+    gpu_profile_efficient: 1
+    cpu_yields_to_gpu: 1.0
+    fan_boost: null
+
+  ai_training:
+    thermal_mode: performance
+    cpu_pl1_w: 30
+    cpu_pl1_floor_w: 15
+    cpu_pl2_w: 55
+    cpu_epp: 50
+    cpu_boost: true
+    gpu_clock_max_mhz: 1500  # hours-long runs: stability and VRAM temps beat peak clocks
+    gpu_clock_floor_mhz: 1000
+    gpu_profile: 1
+    gpu_profile_efficient: 1
+    cpu_yields_to_gpu: 1.0
+    fan_boost: null
+
+  creator:
+    thermal_mode: balanced_performance
+    cpu_pl1_w: 60  # compiles/renders/encodes: CPU gets the heatsink
+    cpu_pl1_floor_w: 25
+    cpu_pl2_w: 100
+    cpu_epp: 20
+    cpu_boost: true
+    gpu_clock_max_mhz: null
+    gpu_clock_floor_mhz: 900
+    gpu_profile: null
+    gpu_profile_efficient: 1
+    cpu_yields_to_gpu: 0.0
+    fan_boost: null
+
+  balanced:
+    thermal_mode: balanced
+    cpu_pl1_w: 35
+    cpu_pl1_floor_w: 15
+    cpu_pl2_w: 80
+    cpu_epp: 50
+    cpu_boost: true
+    gpu_clock_max_mhz: null
+    gpu_clock_floor_mhz: 900
+    gpu_profile: null
+    gpu_profile_efficient: 1
+    cpu_yields_to_gpu: 0.5
+    fan_boost: null
+
+  quiet:
+    thermal_mode: quiet
+    cpu_pl1_w: 20  # light work in a hot room without the fans screaming
+    cpu_pl1_floor_w: 10
+    cpu_pl2_w: 45
+    cpu_epp: 70
+    cpu_boost: false
+    gpu_clock_max_mhz: 1200
+    gpu_clock_floor_mhz: 600
+    gpu_profile: null
+    gpu_profile_efficient: null
+    cpu_yields_to_gpu: 0.5
+    fan_boost: 0
+
+  battery:
+    thermal_mode: low_power
+    cpu_pl1_w: 15
+    cpu_pl1_floor_w: 10
+    cpu_pl2_w: 30
+    cpu_epp: 85
+    cpu_boost: false
+    gpu_clock_max_mhz: 900
+    gpu_clock_floor_mhz: 600
+    gpu_profile: null
+    gpu_profile_efficient: null
+    cpu_yields_to_gpu: 0.5
+    fan_boost: 0
